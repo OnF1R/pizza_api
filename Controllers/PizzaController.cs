@@ -18,9 +18,47 @@ namespace pizza_api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetPizzas([FromQuery] PaginationParams @params)
+        public async Task<IActionResult> GetPizzas([FromQuery] PaginationParams @params, SortFilter sortFilter)
         {
-            var pizzas = await _pizzaService.GetPizzasAsync(@params);
+            var pizzas = await _pizzaService.GetPizzasAsync(@params, sortFilter);
+
+            var paginationMetadata = new PaginationMetadata(pizzas.Count(), @params.Page, @params.ItemsPerPage);
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            var paginatedPizzas = pizzas.Skip((@params.Page - 1) * @params.ItemsPerPage).Take(@params.ItemsPerPage);
+
+            if (paginatedPizzas == null || paginatedPizzas.Count() <= 0)
+            {
+                return StatusCode(StatusCodes.Status204NoContent, "No Pizzas in database");
+            }
+
+            return StatusCode(StatusCodes.Status200OK, paginatedPizzas);
+        }
+
+        [HttpGet("WithType")]
+        public async Task<IActionResult> GetPizzasWithType([FromQuery] PaginationParams @params, int pizzaType, SortFilter sortFilter)
+        {
+            var pizzas = await _pizzaService.GetPizzasWithTypeAsync(@params, pizzaType, sortFilter);
+
+            var paginationMetadata = new PaginationMetadata(pizzas.Count(), @params.Page, @params.ItemsPerPage);
+
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+
+            var paginatedPizzas = pizzas.Skip((@params.Page - 1) * @params.ItemsPerPage).Take(@params.ItemsPerPage);
+
+            if (paginatedPizzas == null || paginatedPizzas.Count() <= 0)
+            {
+                return StatusCode(StatusCodes.Status204NoContent, "No Pizzas in database");
+            }
+
+            return StatusCode(StatusCodes.Status200OK, paginatedPizzas);
+        }
+
+        [HttpGet("WithCategory")]
+        public async Task<IActionResult> GetPizzasWithCategory([FromQuery] PaginationParams @params, int pizzaCategory, SortFilter sortFilter)
+        {
+            var pizzas = await _pizzaService.GetPizzasWithCategoryAsync(@params, pizzaCategory, sortFilter);
 
             var paginationMetadata = new PaginationMetadata(pizzas.Count(), @params.Page, @params.ItemsPerPage);
 

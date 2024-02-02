@@ -23,7 +23,7 @@ namespace pizza_api
             builder.Services.AddCors();
 
             //var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-            string connectionString = "Server=localhost;Port=5432;User Id=postgres;Password=password;Database=pizzaAPI;";
+            string connectionString = "Server=localhost;Port=5432;User Id=postgres;Password=moloko990;Database=pizzaAPI;";
             builder.Services.AddDbContext<ApplicationContext>(options =>
                 options.UseNpgsql(connectionString));
 

@@ -21,7 +21,7 @@ namespace pizza_api.Services.Implimentations
             _cache = cache;
         }
 
-        public async Task<List<Pizza>> GetPizzasAsync(PaginationParams @params)
+        public async Task<List<Pizza>> GetPizzasAsync(PaginationParams @params, SortFilter sortFilter = SortFilter.Alphabet)
         {
             try
             {
@@ -32,9 +32,106 @@ namespace pizza_api.Services.Implimentations
                 if (_cache.TryGetValue(PizzaListCacheKey, out List<Pizza> pizzas))
                     return pizzas;
 
-                pizzas = await _db.Pizzas.ToListAsync();
+                switch (sortFilter)
+                {
+                    case SortFilter.Alphabet:
+                        pizzas = await _db.Pizzas.OrderBy(p => p.Title).ToListAsync();
+                        break;
+                    case SortFilter.PriceDecrease:
+                        pizzas = await _db.Pizzas.OrderByDescending(p => p.Price).ToListAsync();
+                        break;
+                    case SortFilter.PriceIncreace:
+                        pizzas = await _db.Pizzas.OrderBy(p => p.Price).ToListAsync();
+                        break;
+                    case SortFilter.Rating:
+                        pizzas = await _db.Pizzas.OrderByDescending(p => p.Rating).ToListAsync();
+                        break;
+                    default:
+                        pizzas = await _db.Pizzas.OrderBy(p => p.Title).ToListAsync();
+                        break;
+                }
 
-                _cache.Set(PizzaListCacheKey + $"_page_{@params.Page}", pizzas, cacheOptions);
+                _cache.Set(PizzaListCacheKey + $"_page_{@params.Page}_{sortFilter}", pizzas, cacheOptions);
+
+                return pizzas;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<List<Pizza>> GetPizzasWithTypeAsync(PaginationParams @params, int pizzaType, SortFilter sortFilter)
+        {
+            try
+            {
+                var cacheOptions = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromSeconds(60))
+                .SetAbsoluteExpiration(TimeSpan.FromSeconds(90));
+
+                if (_cache.TryGetValue(PizzaListCacheKey, out List<Pizza> pizzas))
+                    return pizzas;
+
+                switch (sortFilter)
+                {
+                    case SortFilter.Alphabet:
+                        pizzas = await _db.Pizzas.Where(p => p.Types.Contains(pizzaType)).OrderBy(p => p.Title).ToListAsync();
+                        break;
+                    case SortFilter.PriceDecrease:
+                        pizzas = await _db.Pizzas.Where(p => p.Types.Contains(pizzaType)).OrderByDescending(p => p.Price).ToListAsync();
+                        break;
+                    case SortFilter.PriceIncreace:
+                        pizzas = await _db.Pizzas.Where(p => p.Types.Contains(pizzaType)).OrderBy(p => p.Price).ToListAsync();
+                        break;
+                    case SortFilter.Rating:
+                        pizzas = await _db.Pizzas.Where(p => p.Types.Contains(pizzaType)).OrderByDescending(p => p.Rating).ToListAsync();
+                        break;
+                    default:
+                        pizzas = await _db.Pizzas.Where(p => p.Types.Contains(pizzaType)).OrderBy(p => p.Title).ToListAsync();
+                        break;
+                }
+
+                _cache.Set(PizzaListCacheKey + $"_page_{@params.Page}_{pizzaType}type_{sortFilter}", pizzas, cacheOptions);
+
+                return pizzas;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<List<Pizza>> GetPizzasWithCategoryAsync(PaginationParams @params, int pizzaCategory, SortFilter sortFilter)
+        {
+            try
+            {
+                var cacheOptions = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromSeconds(60))
+                .SetAbsoluteExpiration(TimeSpan.FromSeconds(90));
+
+                if (_cache.TryGetValue(PizzaListCacheKey, out List<Pizza> pizzas))
+                    return pizzas;
+
+                switch (sortFilter)
+                {
+                    case SortFilter.Alphabet:
+                        pizzas = await _db.Pizzas.Where(p => p.Category == pizzaCategory).OrderBy(p => p.Title).ToListAsync();
+                        break;
+                    case SortFilter.PriceDecrease:
+                        pizzas = await _db.Pizzas.Where(p => p.Category == pizzaCategory).OrderByDescending(p => p.Price).ToListAsync();
+                        break;
+                    case SortFilter.PriceIncreace:
+                        pizzas = await _db.Pizzas.Where(p => p.Category == pizzaCategory).OrderBy(p => p.Price).ToListAsync();
+                        break;
+                    case SortFilter.Rating:
+                        pizzas = await _db.Pizzas.Where(p => p.Category == pizzaCategory).OrderByDescending(p => p.Rating).ToListAsync();
+                        break;
+                    default:
+                        pizzas = await _db.Pizzas.Where(p => p.Category == pizzaCategory).OrderBy(p => p.Title).ToListAsync();
+                        break;
+                }
+
+                _cache.Set(PizzaListCacheKey + $"_page_{@params.Page}_{pizzaCategory}category_{sortFilter}", pizzas, cacheOptions);
 
                 return pizzas;
             }
